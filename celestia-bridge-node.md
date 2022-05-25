@@ -33,7 +33,7 @@ sudo apt install curl tar wget clang pkg-config libssl-dev jq build-essential gi
 ## Installing GO
 It is necessary to install the GO language in the OS, so we can later compile the Celestia Application. On our example, we are using version 1.17.2:
 ```sh
-ver="1.17.2"
+ver="1.18.2"
 cd $HOME
 wget "https://golang.org/dl/go$ver.linux-amd64.tar.gz"
 sudo rm -rf /usr/local/go
@@ -51,7 +51,7 @@ go version
 ```
 Output should be the version installed:
 ```sh
-go version go1.17.2 linux/amd64
+go version go1.18.2 linux/amd64
 ```
 
 ## Part 1: Deploy the Celestia App
@@ -66,7 +66,8 @@ cd $HOME
 rm -rf celestia-app
 git clone https://github.com/celestiaorg/celestia-app.git
 cd celestia-app/
-git checkout tags/v0.1.0 -b v0.1.0
+git fetch
+git checkout v0.5.1
 make install
 ```
 To check if the binary was successfully compiled you can run the binary using the `--help` flag:
@@ -117,19 +118,18 @@ cd $HOME
 rm -rf networks
 git clone https://github.com/celestiaorg/networks.git
 ```
-To initialize the network pick a "node-name" that describes your node. The --chain-id parameter we are using here is "devnet-2". Keep in mind that this might change if a new testnet is deployed.
+To initialize the network pick a "node-name" that describes your node. The --chain-id parameter we are using here is "mamaki". Keep in mind that this might change if a new testnet is deployed.
 ```sh
-celestia-appd init "node-name" --chain-id devnet-2
+celestia-appd init "node-name" --chain-id mamaki
 ```
-Copy the `genesis.json` file. For devnet-2 we are using:
+Copy the `genesis.json` file. For mamaki we are using:
 ```sh
-cp $HOME/networks/devnet-2/genesis.json $HOME/.celestia-app/config
+cp $HOME/networks/mamaki/genesis.json $HOME/.celestia-app/config
 ```
-Set seeds and peers:
+Set bootstrap peers:
 ```sh
-SEEDS="74c0c793db07edd9b9ec17b076cea1a02dca511f@46.101.28.34:26656"
-PEERS="34d4bfec8998a8fac6393a14c5ae151cf6a5762f@194.163.191.41:26656"
-sed -i.bak -e "s/^seeds *=.*/seeds = \"$SEEDS\"/; s/^persistent_peers *=.*/persistent_peers = \"$PEERS\"/" $HOME/.celestia-app/config/config.toml
+BOOTSTRAP_PEERS="a46bbdb81e66c950e3cdbe5ee748a2d6bdb185dd@161.97.168.77:26656"
+sed -i.bak -e "s/^bootstrap-peers *=.*/bootstrap-peers = \"$BOOTSTRAP_PEERS\"/" $HOME/.celestia-app/config/config.toml
 ```
 Reset network:
 ```sh
@@ -187,11 +187,11 @@ Save the mnemonic output as this is the only way to recover your validator walle
 ### Fund a Wallet
 For the public celestia address, you can fund the previously created wallet via Discord by sending this message to #faucet channel:
 ```
-!faucet celes1xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+!faucet celestia1xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 ```
 Wait to see if you get a confirmation that the tokens have been successfully sent. To check if tokens have arrived successfully to the destination wallet run the command below replacing the public address with your own:
 ```sh
-celestia-appd q bank balances celes1xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+celestia-appd q bank balances celestia1xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 ```
 
 ### Delegate Stake to a Validator
@@ -202,11 +202,11 @@ celestia-appd keys show $VALIDATOR_WALLET --bech val -a
 After entering the wallet passphrase you should see a similar output:
 ```sh
 Enter keyring passphrase:
-celesvaloper1q3v5cugc8cdpud87u4zwy0a74uxkk6u43cv6hd
+celestiavaloper1q3v5cugc8cdpud87u4zwy0a74uxkk6u43cv6hd
 ```
-To delegate tokens to the the `celesvaloper` validator, as an example you can run:
+To delegate tokens to the the `celestiavaloper` validator, as an example you can run:
 ```sh
-celestia-appd tx staking delegate celesvaloper1q3v5cugc8cdpud87u4zwy0a74uxkk6u43cv6hd 1000000celes --from=$VALIDATOR_WALLET --chain-id=devnet-2
+celestia-appd tx staking delegate celestiavaloper1q3v5cugc8cdpud87u4zwy0a74uxkk6u43cv6hd 1000000utia --from=$VALIDATOR_WALLET --chain-id=mamaki
 ```
 If successful, you should see a similar output as:
 ```sh
@@ -319,10 +319,10 @@ MONIKER="your_moniker"
 VALIDATOR_WALLET="validator"
 
 celestia-appd tx staking create-validator \
- --amount=1000000celes \
+ --amount=1000000utia \
  --pubkey=$(celestia-appd tendermint show-validator) \
  --moniker=$MONIKER \
- --chain-id=devnet-2 \
+ --chain-id=mamaki \
  --commission-rate=0.1 \
  --commission-max-rate=0.2 \
  --commission-max-change-rate=0.01 \
@@ -348,6 +348,6 @@ timestamp: ""
 tx: null
 txhash: <tx-hash>
 ```
-You should now be able to see your validator from a block explorer such as: https://celestia.observer/validators
+You should now be able to see your validator from a block explorer such as: [https://celestia.explorers.guru/validators]
 
 If you want to run a Celestia Node, check the documentation [here](./celestia-node.md).
